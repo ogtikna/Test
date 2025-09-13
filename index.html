@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device & Location Info</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .info-card {
+            background-color: white;
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            max-width: 90%;
+            width: 500px;
+            transition: all 0.3s ease-in-out;
+            border: 1px solid #e5e7eb;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        .info-value {
+            color: #1f2937;
+            text-align: right;
+            word-break: break-all;
+        }
+
+        .location-button-container {
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+
+        .message-box {
+            position: fixed;
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 1rem 2rem;
+            background-color: #4b5563;
+            color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+            z-index: 1000;
+        }
+
+        .message-box.show {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div id="app" class="info-card">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Device Information</h1>
+
+        <!-- User Agent -->
+        <div class="info-item">
+            <span class="info-label">User Agent:</span>
+            <span id="userAgent" class="info-value"></span>
+        </div>
+
+        <!-- Operating System -->
+        <div class="info-item">
+            <span class="info-label">Operating System:</span>
+            <span id="os" class="info-value"></span>
+        </div>
+
+        <!-- Screen Resolution -->
+        <div class="info-item">
+            <span class="info-label">Screen Resolution:</span>
+            <span id="screenResolution" class="info-value"></span>
+        </div>
+
+        <!-- Browser Language -->
+        <div class="info-item">
+            <span class="info-label">Browser Language:</span>
+            <span id="browserLanguage" class="info-value"></span>
+        </div>
+
+        <!-- CPU Cores -->
+        <div class="info-item">
+            <span class="info-label">CPU Cores:</span>
+            <span id="cpuCores" class="info-value"></span>
+        </div>
+
+        <!-- Device Memory -->
+        <div class="info-item">
+            <span class="info-label">Device Memory:</span>
+            <span id="deviceMemory" class="info-value"></span>
+        </div>
+
+        <!-- Network Connection -->
+        <div class="info-item">
+            <span class="info-label">Network Status:</span>
+            <span id="networkStatus" class="info-value text-green-600"></span>
+        </div>
+
+        <!-- Connection Type -->
+        <div class="info-item">
+            <span class="info-label">Connection Type:</span>
+            <span id="connectionType" class="info-value"></span>
+        </div>
+
+        <!-- Battery Status -->
+        <div class="info-item">
+            <span class="info-label">Battery Level:</span>
+            <span id="batteryStatus" class="info-value">Checking...</span>
+        </div>
+
+        <!-- Location Section -->
+        <div class="info-item flex-col items-start pt-4 pb-0">
+            <h2 class="text-xl font-bold text-gray-800 mb-2">Location</h2>
+            <div id="locationInfo" class="w-full text-center text-gray-500">
+                <p>Location not available.</p>
+            </div>
+            <div class="location-button-container w-full">
+                <button id="getLocationBtn" class="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                    Get My Location
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Box for user feedback -->
+    <div id="messageBox" class="message-box"></div>
+
+    <script>
+        // Global function for showing messages
+        function showMessage(text, duration = 3000) {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.textContent = text;
+            messageBox.classList.add('show');
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, duration);
+        }
+
+        // --- Device Information ---
+        document.getElementById('userAgent').textContent = navigator.userAgent;
+        document.getElementById('os').textContent = navigator.platform;
+        document.getElementById('screenResolution').textContent = `${window.screen.width} x ${window.screen.height}`;
+        document.getElementById('browserLanguage').textContent = navigator.language || 'Not available';
+        document.getElementById('cpuCores').textContent = navigator.hardwareConcurrency || 'Not available';
+        document.getElementById('deviceMemory').textContent = (navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'Not available');
+
+        // --- Network Status ---
+        function updateNetworkStatus() {
+            const statusElement = document.getElementById('networkStatus');
+            if (navigator.onLine) {
+                statusElement.textContent = 'Online';
+                statusElement.classList.remove('text-red-600');
+                statusElement.classList.add('text-green-600');
+            } else {
+                statusElement.textContent = 'Offline';
+                statusElement.classList.remove('text-green-600');
+                statusElement.classList.add('text-red-600');
+            }
+        }
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+        updateNetworkStatus();
+
+        // --- Connection Type (if supported) ---
+        if (navigator.connection && navigator.connection.effectiveType) {
+            document.getElementById('connectionType').textContent = navigator.connection.effectiveType;
+        } else {
+            document.getElementById('connectionType').textContent = 'Not available';
+        }
+
+        // --- Battery Status ---
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then(battery => {
+                function updateBatteryStatus() {
+                    const batteryElement = document.getElementById('batteryStatus');
+                    const level = (battery.level * 100).toFixed(0);
+                    const chargingStatus = battery.charging ? ' (Charging)' : '';
+                    batteryElement.textContent = `${level}%${chargingStatus}`;
+                }
+                battery.addEventListener('levelchange', updateBatteryStatus);
+                battery.addEventListener('chargingchange', updateBatteryStatus);
+                updateBatteryStatus();
+            }).catch(error => {
+                document.getElementById('batteryStatus').textContent = 'Not supported';
+                console.error("Battery Status API not supported:", error);
+            });
+        } else {
+            document.getElementById('batteryStatus').textContent = 'Not supported';
+        }
+
+        // --- Geolocation ---
+        const locationBtn = document.getElementById('getLocationBtn');
+        const locationInfo = document.getElementById('locationInfo');
+
+        locationBtn.addEventListener('click', () => {
+            if ('geolocation' in navigator) {
+                locationBtn.textContent = 'Getting Location...';
+                locationBtn.disabled = true;
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        // Success callback
+                        const lat = position.coords.latitude.toFixed(6);
+                        const lon = position.coords.longitude.toFixed(6);
+                        const accuracy = position.coords.accuracy.toFixed(2);
+                        locationInfo.innerHTML = `
+                            <p><strong>Latitude:</strong> ${lat}</p>
+                            <p><strong>Longitude:</strong> ${lon}</p>
+                            <p><strong>Accuracy:</strong> ${accuracy} meters</p>
+                        `;
+                        locationBtn.textContent = 'Location Found!';
+                        locationBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'bg-red-600', 'hover:bg-red-700');
+                        locationBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                        showMessage('Location successfully retrieved.');
+                    },
+                    (error) => {
+                        // Error callback
+                        let errorMessage = 'Location not available.';
+                        switch (error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = "You denied the request for Geolocation. Please allow location access in your browser settings.";
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = "Location information is unavailable.";
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = "The request to get your location timed out.";
+                                break;
+                        }
+                        locationInfo.innerHTML = `<p class="text-red-600">${errorMessage}</p>`;
+                        locationBtn.textContent = 'Location Error';
+                        locationBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'bg-green-600', 'hover:bg-green-700');
+                        locationBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+                        showMessage(errorMessage);
+                        console.error("Geolocation error:", error);
+                    },
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                );
+            } else {
+                locationInfo.innerHTML = '<p class="text-red-600">Geolocation is not supported by your browser.</p>';
+                showMessage('Geolocation is not supported by your browser.');
+                locationBtn.textContent = 'Not Supported';
+                locationBtn.disabled = true;
+            }
+        });
+    </script>
+</body>
+</html>
